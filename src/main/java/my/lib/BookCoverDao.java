@@ -2,5 +2,5 @@ package my.lib;
 
 import org.springframework.data.repository.CrudRepository;
 
-public interface TestDao extends CrudRepository<Test, Integer> {
+public interface BookCoverDao extends CrudRepository<BookCover, String> {
 }

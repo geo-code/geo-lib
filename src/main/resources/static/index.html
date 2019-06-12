@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="webjars/vue/2.6.10/dist/vue.js"></script>
+    <script src="webjars/axios/dist/axios.js"></script>
+    <script src="webjars/jquery/3.4.1/jquery.js"></script>
+    <script src="webjars/bootstrap/4.3.1/js/bootstrap.js"></script>
+    <script src="webjars/ionicons/4.5.5/dist/ionicons.js"></script>
+    <script src="webjars/underscorejs/1.9.0/underscore-min.js"></script>
+    <script src="webjars/momentjs/2.24.0/moment.js"></script>
+    <link rel="stylesheet" href="webjars/bootstrap/4.3.1/css/bootstrap.css">
+    <link rel="stylesheet" href="webjars/ionicons/4.5.5/dist/css/ionicons.css">
+</head>
+<body>
+<div id="app">
+    <ul class="list-unstyled row">
+        <li v-for="(book, index) in books" class="list-item col-6 row border border-right-0 border-left-0">
+            <div class="col-5">
+                <img :src="book.coverLink" @click="itemSelect(index)" width="65">
+            </div>
+            <div class="col-7 pr-0 small" v-bind:class="{'bg-secondary': book.selected}">
+                <div>
+                    <strong>{{book.title}}</strong>
+                </div>
+                <div>
+                    <small>{{book.author}}</small>
+                </div>
+                <div>
+                    <small>{{book.publishedAt}}</small>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>
+</body>
+</html>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            books: []
+        },
+        created: function () {
+            axios.get('/ajax/books')
+                .then((res) => {
+                    this.books = _.map(res.data, function (book) {
+                        book.title = book.title.replace(/\(.*\)/gi, '').substring(0, 18);
+                        if (book.author) book.author = book.author.substring(0, 10);
+                        book.publishedAt = moment(book.publishedAt).format('YYYY-MM');
+                        book.coverLink = '/ajax/bookCovers/' + book.isbn;
+                        book.selected = false;
+                        return book;
+                    });
+                });
+        },
+        methods: {
+            itemSelect(index) {
+                this.books[index].selected = !this.books[index].selected;
+            }
+        }
+    });
+</script>

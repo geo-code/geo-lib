@@ -1,0 +1,14 @@
+create table book (
+    isbn text primary key,
+    title text,
+    author text,
+    published_at date,
+    created_at date,
+    read_at date,
+    state int
+);
+
+create table book_cover (
+    isbn text primary key,
+    image bytea
+);
