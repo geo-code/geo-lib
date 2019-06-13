@@ -1,5 +1,6 @@
 package my.lib;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
@@ -71,6 +72,7 @@ public class OpenApi {
         private String coverUrl;
 
         @SneakyThrows
+        @JsonIgnore
         public byte[] getCoverBytes() {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(ImageIO.read(new URL(coverUrl)), "jpg", baos);
