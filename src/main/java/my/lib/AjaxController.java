@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.util.List;
 
+import static my.lib.Book.*;
+
 @RestController
 public class AjaxController {
     @Autowired
@@ -19,8 +21,9 @@ public class AjaxController {
     private OpenApi openApi;
 
     @GetMapping("/ajax/books")
-    public Page<Book> getBooks(String state, Pageable pageable) {
-        return bookDao.findByStateOrderByCreatedAtDesc(Book.State.valueOf(state), pageable);
+    public Page<Book> getBooks(State state, Pageable pageable) {
+        if (state == State.read) return bookDao.findByStateOrderByReadAtDesc(state, pageable);
+        return bookDao.findByStateOrderByCreatedAtDesc(state, pageable);
     }
 
     @GetMapping("/ajax/bookCovers/{isbn}")
@@ -61,7 +64,7 @@ public class AjaxController {
 
     @Data
     public static class MoveBook {
-        private Book.State state;
+        private State state;
         private List<String> isbnList;
     }
 }

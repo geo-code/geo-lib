@@ -9,5 +9,7 @@ import java.util.List;
 public interface BookDao extends PagingAndSortingRepository<Book, String> {
     Page<Book> findByStateOrderByCreatedAtDesc(Book.State state, Pageable pageable);
 
+    Page<Book> findByStateOrderByReadAtDesc(Book.State state, Pageable pageable);
+
     List<Book> findByIsbnIn(List<String> isbnList);
 }
