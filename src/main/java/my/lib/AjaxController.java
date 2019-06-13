@@ -1,12 +1,12 @@
 package my.lib;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @RestController
@@ -18,19 +18,9 @@ public class AjaxController {
     @Autowired
     private OpenApi openApi;
 
-    @GetMapping("/ajax/inboxBooks")
-    public Page<Book> getInboxBooks(Pageable pageable) {
-        return bookDao.findByState(Book.State.inbox, pageable);
-    }
-
-    @GetMapping("/ajax/nextBooks")
-    public Page<Book> getNextBooks(Pageable pageable) {
-        return bookDao.findByState(Book.State.next, pageable);
-    }
-
-    @GetMapping("/ajax/readBooks")
-    public Page<Book> getReadBooks(Pageable pageable) {
-        return bookDao.findByState(Book.State.read, pageable);
+    @GetMapping("/ajax/books")
+    public Page<Book> getBooks(String state, Pageable pageable) {
+        return bookDao.findByStateOrderByCreatedAtDesc(Book.State.valueOf(state), pageable);
     }
 
     @GetMapping("/ajax/bookCovers/{isbn}")
@@ -41,5 +31,37 @@ public class AjaxController {
     @GetMapping("/ajax/search")
     public List<OpenApi.BookInfo> search(String query) {
         return openApi.search(query);
+    }
+
+    @PostMapping("/ajax/addBook")
+    @Transactional
+    public void addBook(String isbn) {
+        OpenApi.BookInfo bookInfo = openApi.get(isbn);
+        bookDao.save(new Book(bookInfo.getIsbn(), bookInfo.getTitle(), bookInfo.getAuthor(), bookInfo.getPublishedAt()));
+        bookCoverDao.save(new BookCover(bookInfo.getIsbn(), bookInfo.getCoverBytes()));
+    }
+
+    @PostMapping("/ajax/moveBooks")
+    public void moveBooks(@RequestBody MoveBook moveBook) {
+        bookDao.findByIsbnIn(moveBook.isbnList).forEach(book -> {
+            book.setState(moveBook.getState());
+            bookDao.save(book);
+        });
+    }
+
+    @PostMapping("/ajax/deleteBooks")
+    @Transactional
+    public void deleteBooks(@RequestBody List<String> isbnList) {
+        if (isbnList.size() > 10) throw new RuntimeException();
+        isbnList.forEach(isbn -> {
+            bookDao.deleteById(isbn);
+            bookCoverDao.deleteById(isbn);
+        });
+    }
+
+    @Data
+    public static class MoveBook {
+        private Book.State state;
+        private List<String> isbnList;
     }
 }

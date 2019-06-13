@@ -9,6 +9,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.imageio.ImageIO;
+import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -66,5 +69,12 @@ public class OpenApi {
         private Date publishedAt;
         private Integer price;
         private String coverUrl;
+
+        @SneakyThrows
+        public byte[] getCoverBytes() {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(ImageIO.read(new URL(coverUrl)), "jpg", baos);
+            return baos.toByteArray();
+        }
     }
 }

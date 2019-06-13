@@ -23,13 +23,11 @@
 <div id="app">
     <div class="form-inline">
         <select v-model="state" @change="optionChanged($event.target.value)" class="form-control col-3">
-            <option>next</option>
-            <option>inbox</option>
-            <option>read</option>
+            <option v-for="s in stateList" :value="s">{{s}}</option>
         </select>
         <div class="col-1"></div>
         <input v-model="query" class="form-control col-6">
-        <button @click="searchBook" type="button" class="btn btn-outline-dark btn-block col-2">검색</button>
+        <button @click="searchBook" type="button" class="btn btn-outline-dark btn-block col-2">Find</button>
     </div>
     <div v-for="bookInfo in bookInfos" class="list-item row border">
         <div class="col-2">
@@ -70,6 +68,15 @@
     </ul>
     <div class="container">
         <button @click="getMoreBooks" type="button" class="btn btn-outline-dark btn-block">More</button>
+        <div>&nbsp;</div>
+        <div class="row">
+            <div class="col-4">
+                <button @click="deleteBooks" type="button" class="btn btn-outline-danger">Delete</button>
+            </div>
+            <div v-if="s!=state" v-for="s in stateList" class="col-4">
+                <button @click="moveBooks(s)" type="button" class="btn btn-dark">To {{s}}</button>
+            </div>
+        </div>
     </div>
 </div>
 </body>
@@ -83,6 +90,7 @@
             bookInfos: [],
             query: '',
             state: 'next',
+            stateList: ['next', 'inbox', 'read'],
             nextPage: 0
         },
         created: function () {
@@ -90,7 +98,7 @@
         },
         methods: {
             getMoreBooks() {
-                axios.get('/ajax/inboxBooks?page=' + this.nextPage)
+                axios.get('/ajax/books?state=' + this.state + '&page=' + this.nextPage)
                     .then((res) => {
                         var list = _.map(res.data.content, function (book) {
                             book.title = book.title.replace(/\(.*\)/gi, '').substring(0, 18);
@@ -108,8 +116,11 @@
                 this.books[index].selected = !this.books[index].selected;
             },
             optionChanged(value) {
-                alert(value);
-                // location.href = '/index.html?' + value;
+                this.state = value;
+                this.books = [];
+                this.bookInfos = [];
+                this.nextPage = 0;
+                this.getMoreBooks();
             },
             searchBook() {
                 axios.get('/ajax/search?query=' + this.query)
@@ -123,6 +134,30 @@
             },
             addBook(isbn) {
                 alert(isbn);
+            },
+            addBook(isbn) {
+                axios.post('/ajax/addBook?isbn=' + isbn).then((response) => {
+                    location.reload();
+                });
+            },
+            moveBooks(destState) {
+                axios.post('/ajax/moveBooks', {state: destState, isbnList: this.selectedIsbnList()}).then((response) => {
+                    this.optionChanged(destState);
+                });
+            },
+            deleteBooks() {
+                if (confirm('Delete?')) {
+                    axios.post('/ajax/deleteBooks', this.selectedIsbnList()).then((response) => {
+                        location.reload();
+                    });
+                }
+            },
+            selectedIsbnList() {
+                var isbnList = [];
+                _.each(this.books, function (book) {
+                    if (book.selected) isbnList.push(book.isbn);
+                });
+                return isbnList;
             }
         }
     });
