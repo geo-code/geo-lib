@@ -1,9 +1,9 @@
 package my.lib;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.List;
-
-public interface BookDao extends CrudRepository<Book, String> {
-    List<Book> findByOrderByCreatedAtDesc();
+public interface BookDao extends PagingAndSortingRepository<Book, String> {
+    Page<Book> findByState(Book.State state, Pageable pageable);
 }

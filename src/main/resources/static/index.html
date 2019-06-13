@@ -12,9 +12,44 @@
     <script src="webjars/momentjs/2.24.0/moment.js"></script>
     <link rel="stylesheet" href="webjars/bootstrap/4.3.1/css/bootstrap.css">
     <link rel="stylesheet" href="webjars/ionicons/4.5.5/dist/css/ionicons.css">
+
+    <style>
+        .icon {
+            font-size: 30px;
+        }
+    </style>
 </head>
 <body>
 <div id="app">
+    <div class="form-inline">
+        <select v-model="state" @change="optionChanged($event.target.value)" class="form-control col-3">
+            <option>next</option>
+            <option>inbox</option>
+            <option>read</option>
+        </select>
+        <div class="col-1"></div>
+        <input v-model="query" class="form-control col-6">
+        <button @click="searchBook" type="button" class="btn btn-outline-dark btn-block col-2">검색</button>
+    </div>
+    <div v-for="bookInfo in bookInfos" class="list-item row border">
+        <div class="col-2">
+            <img :src="bookInfo.coverUrl" width="55">
+        </div>
+        <div class="col-8 small">
+            <div>
+                <strong>{{bookInfo.title}}</strong>
+            </div>
+            <div>
+                <small>{{bookInfo.author}}</small>
+            </div>
+            <div>
+                <small>{{bookInfo.publishedAt}} {{bookInfo.publisher}} {{bookInfo.price}}</small>
+            </div>
+        </div>
+        <div class="col-2">
+            <i @click="addBook(bookInfo.isbn)" class="icon ion-md-add-circle"></i>
+        </div>
+    </div>
     <ul class="list-unstyled row">
         <li v-for="(book, index) in books" class="list-item col-6 row border border-right-0 border-left-0">
             <div class="col-5">
@@ -33,6 +68,9 @@
             </div>
         </li>
     </ul>
+    <div class="container">
+        <button @click="getMoreBooks" type="button" class="btn btn-outline-dark btn-block">More</button>
+    </div>
 </div>
 </body>
 </html>
@@ -41,24 +79,50 @@
     new Vue({
         el: '#app',
         data: {
-            books: []
+            books: [],
+            bookInfos: [],
+            query: '',
+            state: 'next',
+            nextPage: 0
         },
         created: function () {
-            axios.get('/ajax/books')
-                .then((res) => {
-                    this.books = _.map(res.data, function (book) {
-                        book.title = book.title.replace(/\(.*\)/gi, '').substring(0, 18);
-                        if (book.author) book.author = book.author.substring(0, 10);
-                        book.publishedAt = moment(book.publishedAt).format('YYYY-MM');
-                        book.coverLink = '/ajax/bookCovers/' + book.isbn;
-                        book.selected = false;
-                        return book;
-                    });
-                });
+            this.getMoreBooks();
         },
         methods: {
+            getMoreBooks() {
+                axios.get('/ajax/inboxBooks?page=' + this.nextPage)
+                    .then((res) => {
+                        var list = _.map(res.data.content, function (book) {
+                            book.title = book.title.replace(/\(.*\)/gi, '').substring(0, 18);
+                            if (book.author) book.author = book.author.substring(0, 10);
+                            book.publishedAt = moment(book.publishedAt).format('YYYY-MM');
+                            book.coverLink = '/ajax/bookCovers/' + book.isbn;
+                            book.selected = false;
+                            return book;
+                        });
+                        this.books = this.books.concat(list);
+                        this.nextPage++;
+                    });
+            },
             itemSelect(index) {
                 this.books[index].selected = !this.books[index].selected;
+            },
+            optionChanged(value) {
+                alert(value);
+                // location.href = '/index.html?' + value;
+            },
+            searchBook() {
+                axios.get('/ajax/search?query=' + this.query)
+                    .then((res) => {
+                        this.bookInfos = _.map(res.data, function (info) {
+                            info.publishedAt = moment(info.publishedAt).format('YYYY-MM');
+                            info.price = info.price.toLocaleString() + '원';
+                            return info;
+                        });
+                    });
+            },
+            addBook(isbn) {
+                alert(isbn);
             }
         }
     });
