@@ -23,7 +23,7 @@ public class AjaxController {
 
     @GetMapping("/ajax/books")
     public Page<Book> getBooks(State state, Pageable pageable) {
-        if (state == State.read) return bookDao.findByStateOrderByReadAtDesc(state, pageable);
+        if (state == State.read) return bookDao.findByStateOrderByReadAtDescIsbn(state, pageable);
         return bookDao.findByStateOrderByCreatedAtDesc(state, pageable);
     }
 

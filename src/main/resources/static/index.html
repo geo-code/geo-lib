@@ -52,7 +52,7 @@
         <li v-for="(book, index) in books" class="list-item col-6 border border-right-0 border-left-0">
             <div v-if="book.isDelimiter" class="p-3">
                 <h5> {{book.title}} </h5>
-                <i class="icon ion-md-play"></i>
+                <i class="icon ion-md-play"></i> {{book.counter.value}}
             </div>
             <div v-if="!book.isDelimiter" class="row">
                 <div class="col-5">
@@ -172,11 +172,14 @@
                 _.each(books, function (book) {
                     if (book.isDelimiter) return;
                     let mmt = moment(book.readAt);
-                    var quarter = mmt.format("YYYY") + ' ' +  mmt.quarter() + 'Q';
+                    var quarter = mmt.format("YYYY") + ' ' + mmt.quarter() + 'Q';
                     if (!set[quarter]) {
-                        set[quarter] = true;
-                        list.push({isDelimiter: true, title: quarter});
+                        set[quarter] = {value: 1};
+                        list.push({isDelimiter: true, title: quarter, counter: set[quarter]});
+                    } else {
+                        set[quarter].value++;
                     }
+                    console.log(book.title);
                     list.push(book);
                 });
                 return list;
