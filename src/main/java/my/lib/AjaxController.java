@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import java.util.Date;
 import java.util.List;
 
 import static my.lib.Book.*;
@@ -48,6 +49,7 @@ public class AjaxController {
     public void moveBooks(@RequestBody MoveBook moveBook) {
         bookDao.findByIsbnIn(moveBook.isbnList).forEach(book -> {
             book.setState(moveBook.getState());
+            if (book.getState() == State.read) book.setReadAt(new Date());
             bookDao.save(book);
         });
     }

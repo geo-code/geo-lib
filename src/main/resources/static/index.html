@@ -49,19 +49,25 @@
         </div>
     </div>
     <ul class="list-unstyled row">
-        <li v-for="(book, index) in books" class="list-item col-6 row border border-right-0 border-left-0">
-            <div class="col-5">
-                <img :src="book.coverLink" @click="itemSelect(index)" width="65">
+        <li v-for="(book, index) in books" class="list-item col-6 border border-right-0 border-left-0">
+            <div v-if="book.isDelimiter" class="p-3">
+                <h5> {{book.title}} </h5>
+                <i class="icon ion-md-play"></i>
             </div>
-            <div class="col-7 pr-0 small" v-bind:class="{'bg-secondary': book.selected}">
-                <div>
-                    <strong>{{book.title}}</strong>
+            <div v-if="!book.isDelimiter" class="row">
+                <div class="col-5">
+                    <img :src="book.coverLink" @click="itemSelect(index)" width="65">
                 </div>
-                <div>
-                    <small>{{book.author}}</small>
-                </div>
-                <div>
-                    <small>{{book.publishedAt}}</small>
+                <div class="col-7 pr-0 small" v-bind:class="{'bg-secondary': book.selected}">
+                    <div>
+                        <strong>{{book.title}}</strong>
+                    </div>
+                    <div>
+                        <small>{{book.author}}</small>
+                    </div>
+                    <div>
+                        <small>{{book.publishedAt}}</small>
+                    </div>
                 </div>
             </div>
         </li>
@@ -100,7 +106,7 @@
             getMoreBooks() {
                 axios.get('/ajax/books?state=' + this.state + '&page=' + this.nextPage)
                     .then((res) => {
-                        var list = _.map(res.data.content, function (book) {
+                        var newList = _.map(res.data.content, function (book) {
                             book.title = book.title.replace(/\(.*\)/gi, '').substring(0, 18);
                             if (book.author) book.author = book.author.substring(0, 10);
                             book.publishedAt = moment(book.publishedAt).format('YYYY-MM');
@@ -108,7 +114,8 @@
                             book.selected = false;
                             return book;
                         });
-                        this.books = this.books.concat(list);
+                        let mergedList = this.books.concat(newList);
+                        this.books = (this.state == 'read' ? this.appendDelimiter(mergedList) : mergedList);
                         this.nextPage++;
                     });
             },
@@ -158,6 +165,21 @@
                     if (book.selected) isbnList.push(book.isbn);
                 });
                 return isbnList;
+            },
+            appendDelimiter(books) {
+                var list = [];
+                var set = {};
+                _.each(books, function (book) {
+                    if (book.isDelimiter) return;
+                    let mmt = moment(book.readAt);
+                    var quarter = mmt.format("YYYY") + ' ' +  mmt.quarter() + 'Q';
+                    if (!set[quarter]) {
+                        set[quarter] = true;
+                        list.push({isDelimiter: true, title: quarter});
+                    }
+                    list.push(book);
+                });
+                return list;
             }
         }
     });
