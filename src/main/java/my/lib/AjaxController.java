@@ -69,4 +69,9 @@ public class AjaxController {
         private State state;
         private List<String> isbnList;
     }
+
+    @GetMapping("/health")
+    public String health() {
+        return "ok";
+    }
 }
