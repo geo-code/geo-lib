@@ -1,0 +1,2 @@
+mvn clean package -DskipTests
+scp target/habit.jar pi@172.30.1.38:/home/pi/habit

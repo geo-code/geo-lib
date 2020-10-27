@@ -9,8 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
-import static my.lib.Book.*;
+import static my.lib.Book.State;
 
 @RestController
 public class AjaxController {
@@ -29,7 +30,9 @@ public class AjaxController {
 
     @GetMapping("/ajax/bookCovers/{isbn}")
     public byte[] getBookCover(@PathVariable String isbn) {
-        return bookCoverDao.findById(isbn).get().getImage();
+        Optional<BookCover> opt = bookCoverDao.findById(isbn);
+        if (opt.isPresent()) return opt.get().getImage();
+        else return new byte[]{};
     }
 
     @GetMapping("/ajax/search")
